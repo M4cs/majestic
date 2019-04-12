@@ -1,13 +1,13 @@
 import { ObjectType, Field } from "type-graphql";
 
-export type TestItemType = "describe" | "it" | "test";
+export type TestItemType = "describe" | "it" | "todo";
 
 @ObjectType()
 export class TestItem {
   @Field()
   id: string;
 
-  @Field()
+  @Field({ nullable: true })
   name: string;
 
   @Field()
@@ -15,4 +15,7 @@ export class TestItem {
 
   @Field({ nullable: true })
   parent?: string;
+
+  @Field()
+  only: boolean;
 }

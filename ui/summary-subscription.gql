@@ -7,5 +7,12 @@ subscription {
     failedTests
     executingTests
     passingTests
+    coverage {
+      statement
+      function
+      branch
+      line
+    }
+    haveCoverageReport
   }
 }

@@ -1,3 +1,4 @@
+import * as parseArgs from "minimist";
 import * as readPkgUp from "read-pkg-up";
 import * as resolvePkg from "resolve-pkg";
 import { MajesticConfig } from "./types";
@@ -16,10 +17,14 @@ export default class ConfigResolver {
     let env: any = {};
     const configFromPkgJson = this.getConfigFromPackageJson(projectRoot) || {};
 
+    const jestScriptPathFromPackage = configFromPkgJson.jestScriptPath
+        ? join(projectRoot, configFromPkgJson.jestScriptPath)
+        : null;
+
     if (this.isBootstrappedWithCreateReactApp(projectRoot)) {
       log("Project identified as Create react app");
 
-      jestScriptPath = this.getJestScriptForCreateReactApp(projectRoot);
+      jestScriptPath = jestScriptPathFromPackage || this.getJestScriptForCreateReactApp(projectRoot);
       args = ["--env=jsdom"];
       env = {
         CI: "true"
@@ -27,17 +32,21 @@ export default class ConfigResolver {
     } else {
       log("Majestic configuration from Package.json: ", configFromPkgJson);
 
-      const jestScriptPathFromPackage = configFromPkgJson.jestScriptPath
-        ? join(projectRoot, configFromPkgJson.jestScriptPath)
-        : null;
-      jestScriptPath =
-        jestScriptPathFromPackage || this.getJestScriptPath(projectRoot);
-      args = configFromPkgJson.args || [];
-      env = configFromPkgJson.env || {};
+      jestScriptPath = jestScriptPathFromPackage || this.getJestScriptPath(projectRoot);
+    }
+
+    const configArg = parseArgs(process.argv).config;
+
+    if (configArg && configFromPkgJson.configs) {
+      args = [...args, ...(configFromPkgJson.configs[configArg].args || [])];
+      env = {...env, ...(configFromPkgJson.configs[configArg].env || {})};
+    } else {
+      args = [...args, ...(configFromPkgJson.args || [])];
+      env = {...env, ...(configFromPkgJson.env || {})};
     }
 
     const majesticConfig = {
-      jestScriptPath,
+      jestScriptPath: `"${jestScriptPath}"`,
       args,
       env
     };

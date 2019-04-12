@@ -9,7 +9,7 @@ import UPDATE_SNAPSHOT from "./update-snapshot.gql";
 import FILERESULTSUB from "./subscription.gql";
 import RESULT from "./result.gql";
 import Test from "./test-item";
-import { transform } from "./tranformer";
+import { transform } from "./transformer";
 import useSubscription from "./use-subscription";
 import FileSummary from "./summary";
 import { TestFileResult } from "../../server/api/workspace/test-result/file-result";
@@ -56,7 +56,11 @@ function TestFile({ selectedFilePath, isRunning, projectRoot, onStop }: Props) {
   ).length;
 
   const testCount = ((fileItemResult && fileItemResult.items) || []).filter(
-    fileItem => fileItem.type === "it" || fileItem.type === "test"
+    fileItem => fileItem.type === "it"
+  ).length;
+
+  const todoCount = ((fileItemResult && fileItemResult.items) || []).filter(
+    fileItem => fileItem.type === "todo"
   ).length;
 
   const runFile = useMutation(RUNFILE, {
@@ -102,6 +106,7 @@ function TestFile({ selectedFilePath, isRunning, projectRoot, onStop }: Props) {
         projectRoot={projectRoot}
         suiteCount={suiteCount}
         testCount={testCount}
+        todoCount={todoCount}
         passingTests={result && result.numPassingTests}
         failingTests={result && result.numFailingTests}
         path={selectedFilePath}

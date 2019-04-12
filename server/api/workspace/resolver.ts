@@ -38,7 +38,7 @@ export default class WorkspaceResolver {
     this.project = new Project(root);
     const configResolver = new ConfigResolver();
     this.majesticConfig = configResolver.getConfig(root);
-    this.results = new Results();
+    this.results = new Results(root);
 
     pubsub.subscribe(Events.TEST_RESULT, ({ payload }: any) => {
       const result = new TestFileResult();
@@ -75,6 +75,15 @@ export default class WorkspaceResolver {
       this.notifySummaryChange();
     });
 
+    pubsub.subscribe(Events.RUN_COMPLETE, ({ payload }) => {
+      this.results.mapCoverage(payload.coverageMap);
+
+      setTimeout(() => {
+        this.results.checkIfCoverageReportExists();
+        this.notifySummaryChange();
+      }, 2000);
+    });
+
     pubsub.subscribe(RunnerEvents.RUNNER_STOPPED, () => {
       this.results.markExecutingAsStopped();
     });
@@ -90,9 +99,7 @@ export default class WorkspaceResolver {
     workspace.projectRoot = this.project.projectRoot;
     workspace.name = "Jest project";
 
-    const fileMap = this.project.getFilesList(
-      this.majesticConfig.jestScriptPath
-    );
+    const fileMap = this.project.getFilesList(this.majesticConfig);
     workspace.files = Object.entries(fileMap).map(([key, value]: any) => ({
       name: value.name,
       path: value.path,
@@ -172,6 +179,8 @@ export default class WorkspaceResolver {
     summary.failedTests = this.results.getFailedTests();
     summary.executingTests = this.results.getExecutingTests();
     summary.passingTests = this.results.getPassedTests();
+    summary.coverage = this.results.getCoverage();
+    summary.haveCoverageReport = this.results.doesHaveCoverageReport();
     return summary;
   }
 
@@ -191,6 +200,8 @@ export default class WorkspaceResolver {
     result.failedTests = this.results.getFailedTests();
     result.executingTests = this.results.getExecutingTests();
     result.passingTests = this.results.getPassedTests();
+    result.coverage = this.results.getCoverage();
+    result.haveCoverageReport = this.results.doesHaveCoverageReport();
     return result;
   }
 }

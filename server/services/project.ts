@@ -1,4 +1,4 @@
-import { TreeMap } from "./types";
+import { TreeMap, MajesticConfig } from "./types";
 import { spawnSync } from "child_process";
 import { sep, join, extname } from "path";
 import { createLogger } from "../logger";
@@ -12,16 +12,17 @@ export default class Project {
     this.projectRoot = root;
   }
 
-  getFilesList(jestScriptPath: string) {
+  getFilesList(config: MajesticConfig) {
     const configProcess = spawnSync(
       "node",
-      [jestScriptPath, "--listTests", "--json"],
+      [config.jestScriptPath, ...(config.args || []), "--listTests", "--json"],
       {
         cwd: this.projectRoot,
         shell: true,
         stdio: "pipe",
         env: {
           CI: "true",
+          ...(config.env || {}),
           ...process.env
         }
       }
@@ -29,7 +30,7 @@ export default class Project {
 
     const filesStr = configProcess.stdout.toString().trim();
     const files: string[] = JSON.parse(filesStr);
-    log("Ideitifed test files: ", files);
+    log("Identified test files: ", files);
 
     const relativeFiles = files.map(file => file.replace(this.projectRoot, ""));
     const map: TreeMap = {
@@ -44,7 +45,7 @@ export default class Project {
     relativeFiles.forEach(path => {
       const tokens = path.split(sep).filter(token => token.trim() !== "");
       let currentPath = "";
-      let parrentPath = "";
+      let parentPath = "";
       tokens.forEach((token, i) => {
         currentPath = `${currentPath}${sep}${token}`;
         const type = [".jsx", ".tsx", ".ts", ".js"].includes(
@@ -57,10 +58,10 @@ export default class Project {
             name: token,
             type,
             path: join(this.projectRoot, currentPath),
-            parent: join(this.projectRoot, parrentPath)
+            parent: join(this.projectRoot, parentPath)
           };
         }
-        parrentPath = currentPath;
+        parentPath = currentPath;
       });
     });
 

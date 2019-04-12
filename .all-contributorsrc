@@ -13,6 +13,100 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "M4cs",
+      "name": "Max Bridgland",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/34947910?v=4",
+      "profile": "https://github.com/M4cs",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "yurm04",
+      "name": "Yuraima Estevez",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/4642404?v=4",
+      "profile": "https://github.com/yurm04",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jake-nz",
+      "name": "Jake Crosby",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/437471?v=4",
+      "profile": "http://jake.nz",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "gavinhenderson",
+      "name": "Gavin Henderson",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1359202?v=4",
+      "profile": "http://gavinhenderson.me",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "briwa",
+      "name": "briwa",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/8046636?v=4",
+      "profile": "https://briwa.github.io",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Luanf",
+      "name": "Luan Ferreira",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/9099705?v=4",
+      "profile": "https://github.com/Luanf",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "cse-tushar",
+      "name": "Tushar Gupta",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/12570521?v=4",
+      "profile": "https://github.com/cse-tushar",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "agustif",
+      "name": "Agusti Fernandez",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6601142?v=4",
+      "profile": "https://agu.st/",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
+    },
+    {
+      "login": "moos",
+      "name": "Moos",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/233047?v=4",
+      "profile": "http://blog.42at.com",
+      "contributions": [
+        "bug",
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "MacZel",
+      "name": "MacZel",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/25805810?v=4",
+      "profile": "http://maciejzelek.space",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import styled from "styled-components";
-import { TestFileItem } from "./tranformer";
+import { TestFileItem } from "./transformer";
 import { TestFileResult } from "../../server/api/workspace/test-result/file-result";
 import TestIndicator from "./test-indicator";
 import { color, space } from "styled-system";
@@ -38,7 +38,7 @@ const Label = styled.div`
   }
 `;
 
-const Content = styled.div`
+const Content = styled.div<any>`
   padding: 5px;
   display: flex;
   flex-direction: column;
@@ -46,10 +46,10 @@ const Content = styled.div`
   background-color: #262529;
   border-radius: 4px;
   margin-bottom: 10px;
-  border: 1px solid #333437;
+  border: 1px solid ${props => (props.only ? "#9d8301" : "#333437")};
 `;
 
-const FailtureMessage = styled.div`
+const FailureMessage = styled.div`
   padding-left: 20px;
   pre {
     overflow: auto;
@@ -77,7 +77,7 @@ interface Props {
 }
 
 export default function Test({
-  item: { name, children },
+  item: { name, only, children },
   item,
   result
 }: Props) {
@@ -85,7 +85,7 @@ export default function Test({
   const isDurationAvailable = testResult && testResult.duration !== undefined;
   const haveFailure = testResult && testResult.failureMessages.length > 0;
   const allChildrenPassing = (children || []).every(child => {
-    if (child.type === "it" || child.type === "test") {
+    if (child.type === "it") {
       const childResult = getResults(child, result as any);
       return childResult && childResult.status === "passed";
     }
@@ -95,7 +95,7 @@ export default function Test({
 
   return (
     <Container>
-      <Content>
+      <Content only={only}>
         <Label>
           <TestIndicator
             status={
@@ -104,6 +104,7 @@ export default function Test({
                 : testResult && testResult.status
             }
             describe={item.type === "describe"}
+            todo={item.type === "todo"}
           />
           <span>{name}</span>
           {isDurationAvailable && (
@@ -111,7 +112,7 @@ export default function Test({
           )}
         </Label>
         {testResult && haveFailure && (
-          <FailtureMessage>
+          <FailureMessage>
             <pre
               dangerouslySetInnerHTML={{
                 __html: convert.toHtml(
@@ -119,7 +120,7 @@ export default function Test({
                 )
               }}
             />
-          </FailtureMessage>
+          </FailureMessage>
         )}
       </Content>
       {children &&

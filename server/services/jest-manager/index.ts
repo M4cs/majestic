@@ -31,30 +31,32 @@ export default class JestManager {
     this.config = config;
   }
 
-  run(watch: boolean) {
+  run(watch: boolean, collectCoverage: boolean) {
     this.executeJest(
       [
         "--reporters",
-        this.getRepoterPath(),
+        this.getReporterPath(),
         ...(watch ? [this.getWatchFlag()] : [])
       ],
       true,
-      true
+      true,
+      collectCoverage
     );
   }
 
-  runSingleFile(path: string, watch: boolean) {
+  runSingleFile(path: string, watch: boolean, collectCoverage: boolean) {
     this.executeJest(
       [
         this.getPatternForPath(path),
         ...(watch ? [this.getWatchFlag()] : []),
         "--reporters",
         "default",
-        this.getRepoterPath(),
+        this.getReporterPath(),
         "--verbose=false" // this would allow jest to include console output in the result of reporter
       ],
       !watch, // while watching, can not inherit stdio because we want to write back and interact with the process
-      false
+      false,
+      collectCoverage
     );
   }
 
@@ -64,8 +66,9 @@ export default class JestManager {
         this.getPatternForPath(path),
         "-u",
         "--reporters",
-        this.getRepoterPath()
+        this.getReporterPath()
       ],
+      false,
       false,
       false
     );
@@ -95,7 +98,8 @@ export default class JestManager {
   executeJest(
     args: string[] = [],
     inherit: boolean,
-    shouldReportSummary: boolean
+    shouldReportSummary: boolean,
+    collectCoverage: boolean
   ) {
     if (!this.config.jestScriptPath) {
       throw new Error("Jest script path is empty");
@@ -107,10 +111,12 @@ export default class JestManager {
       "-r",
       this.getPatchFilePath(),
       this.config.jestScriptPath,
+      ...(this.config.args || []),
       "--colors",
-      "--collectCoverage=false",
-      ...args,
-      ...(this.config.args || [])
+      ...(collectCoverage
+        ? ["--collectCoverage=true"]
+        : ["--collectCoverage=false"]),
+      ...args
     ];
 
     const finalEnv = {
@@ -125,7 +131,7 @@ export default class JestManager {
       cwd: this.project.projectRoot,
       shell: true,
       stdio: inherit ? "inherit" : "pipe",
-      env: { ...finalEnv, ...(process.env || {}) }
+      env: { ...(process.env || {}), ...finalEnv }
     });
 
     this.process.on("exit", () => {
@@ -143,12 +149,12 @@ export default class JestManager {
       });
   }
 
-  getRepoterPath() {
-    return join(__dirname, "./scripts/reporter.js");
+  getReporterPath() {
+    return `"${join(__dirname, "./scripts/reporter.js")}"`;
   }
 
   getPatchFilePath() {
-    return join(__dirname, "./scripts/patch.js");
+    return `"${join(__dirname, "./scripts/patch.js")}"`;
   }
 
   getPatternForPath(path: string) {

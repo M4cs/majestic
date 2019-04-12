@@ -1,6 +1,17 @@
-export type TestFileStatus = "IDLE" | "EXECUTING";
+import { createSourceMapStore, MapStore } from "istanbul-lib-source-maps";
+import { createCoverageMap, CoverageMap } from "istanbul-lib-coverage";
+import { existsSync } from "fs";
+import { join } from "path";
 
+export type TestFileStatus = "IDLE" | "EXECUTING";
+export interface CoverageSummary {
+  statement: number;
+  line: number;
+  function: number;
+  branch: number;
+}
 export default class Results {
+  private projectRoot: string = "";
   private results: {
     [path: string]: {
       report?: any;
@@ -21,7 +32,17 @@ export default class Results {
     numFailedTestSuites: number;
   };
 
-  constructor() {
+  private coverage: CoverageSummary = {
+    statement: 0,
+    line: 0,
+    function: 0,
+    branch: 0
+  };
+
+  private haveCoverageReport: boolean = false;
+
+  constructor(projectRoot: string) {
+    this.projectRoot = projectRoot;
     this.results = {};
     this.summary = {
       numFailedTests: 0,
@@ -29,6 +50,8 @@ export default class Results {
       numPassedTestSuites: 0,
       numFailedTestSuites: 0
     };
+
+    this.checkIfCoverageReportExists();
   }
 
   public setTestStart(path: string) {
@@ -109,5 +132,44 @@ export default class Results {
         return status.isExecuting === true;
       })
       .map(([path]) => path);
+  }
+
+  public mapCoverage(data: any) {
+    if (!data) {
+      this.coverage = {
+        statement: 0,
+        branch: 0,
+        function: 0,
+        line: 0
+      };
+
+      return;
+    }
+
+    const sourceMapStore = createSourceMapStore();
+    const coverageMap = createCoverageMap(data);
+    const transformed = sourceMapStore.transformCoverage(coverageMap);
+    const coverageSummary = transformed.map.getCoverageSummary();
+
+    this.coverage = {
+      statement: coverageSummary.statements.pct,
+      branch: coverageSummary.branches.pct,
+      function: coverageSummary.functions.pct,
+      line: coverageSummary.lines.pct
+    };
+  }
+
+  public checkIfCoverageReportExists() {
+    this.haveCoverageReport = existsSync(
+      join(this.projectRoot, "coverage/lcov-report/index.html")
+    );
+  }
+
+  public getCoverage() {
+    return this.coverage;
+  }
+
+  public doesHaveCoverageReport() {
+    return this.haveCoverageReport;
   }
 }
