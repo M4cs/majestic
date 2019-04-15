@@ -2,6 +2,11 @@ import { createSourceMapStore, MapStore } from "istanbul-lib-source-maps";
 import { createCoverageMap, CoverageMap } from "istanbul-lib-coverage";
 import { existsSync } from "fs";
 import { join } from "path";
+import { MajesticConfig } from "./types";
+import { spawnSync } from "child_process";
+import { createLogger } from "../logger";
+
+const log = createLogger("Results");
 
 export type TestFileStatus = "IDLE" | "EXECUTING";
 export interface CoverageSummary {
@@ -40,6 +45,9 @@ export default class Results {
   };
 
   private haveCoverageReport: boolean = false;
+
+  public coverageFilePath: string = "";
+  public coverageDirectory: string = "";
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
@@ -151,18 +159,22 @@ export default class Results {
     const transformed = sourceMapStore.transformCoverage(coverageMap);
     const coverageSummary = transformed.map.getCoverageSummary();
 
+    const statementCoverage = coverageSummary.statements.pct as any;
+    const branchCoverage = coverageSummary.branches.pct as any;
+    const functionCoverage = coverageSummary.functions.pct as any;
+    const lineCoverage = coverageSummary.lines.pct as any;
+
     this.coverage = {
-      statement: coverageSummary.statements.pct,
-      branch: coverageSummary.branches.pct,
-      function: coverageSummary.functions.pct,
-      line: coverageSummary.lines.pct
+      statement: statementCoverage === "Unknown" ? 0 : statementCoverage,
+      branch: branchCoverage === "Unknown" ? 0 : branchCoverage,
+      function: functionCoverage === "Unknown" ? 0 : functionCoverage,
+      line: lineCoverage === "Unknown" ? 0 : lineCoverage
     };
   }
 
   public checkIfCoverageReportExists() {
-    this.haveCoverageReport = existsSync(
-      join(this.projectRoot, "coverage/lcov-report/index.html")
-    );
+    this.haveCoverageReport = existsSync(this.coverageFilePath);
+    return this.haveCoverageReport;
   }
 
   public getCoverage() {
@@ -171,5 +183,42 @@ export default class Results {
 
   public doesHaveCoverageReport() {
     return this.haveCoverageReport;
+  }
+
+  public getCoverageReportPath(config: MajesticConfig) {
+    try {
+      const configProcess = spawnSync(
+        "node",
+        [
+          config.jestScriptPath,
+          ...(config.args || []),
+          "--showConfig",
+          "--json"
+        ],
+        {
+          cwd: this.projectRoot,
+          shell: true,
+          stdio: "pipe",
+          env: {
+            CI: "true",
+            ...(config.env || {}),
+            ...process.env
+          }
+        }
+      );
+
+      const filesStr = configProcess.stdout.toString().trim();
+      const jestConfig = JSON.parse(filesStr);
+      this.coverageDirectory =
+        jestConfig.globalConfig && jestConfig.globalConfig.coverageDirectory;
+      this.coverageFilePath = join(
+        this.coverageDirectory,
+        "/lcov-report/index.html"
+      );
+    } catch (e) {
+      log(
+        "Error occured while obtaining Jest cofiguration for coverage report"
+      );
+    }
   }
 }
